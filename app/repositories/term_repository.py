@@ -118,3 +118,43 @@ class TermRepository(
         stmt = stmt.order_by(self.model.term)
 
         return self.session.scalars(stmt).all()
+
+    def find_duplicate(
+        self,
+        *,
+        topic_id: int | None,
+        src_lang_id: int,
+        trg_lang_id: int,
+        term: str,
+        exclude_term_id: int | None = None,
+    ) -> Term | None:
+        """
+        Find a term with the same context.
+
+        Returns the existing term if a duplicate exists,
+        otherwise returns None.
+        """
+
+        stmt = select(self.model)
+
+        stmt = stmt.where(
+            self.model.src_lang_id == src_lang_id,
+            self.model.trg_lang_id == trg_lang_id,
+            self.model.term == term,
+        )
+
+        if topic_id is not None:
+            stmt = stmt.where(
+                self.model.topic_id == topic_id
+            )
+        else:
+            stmt = stmt.where(
+                self.model.topic_id.is_(None)
+            )
+
+        if exclude_term_id is not None:
+            stmt = stmt.where(
+                self.model.term_id != exclude_term_id
+            )
+
+        return self.session.scalar(stmt)
