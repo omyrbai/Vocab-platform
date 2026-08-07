@@ -18,3 +18,10 @@ from .term import (
     TermUpdate,
     TermRead,
 )
+
+from .user import (
+    UserBase,
+    UserCreate,
+    UserUpdate,
+    UserRead,
+)

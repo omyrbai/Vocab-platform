@@ -5,6 +5,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.db.models.term import Term
+    from app.db.models.user import User
 
 class Language(Base):
     __tablename__ = "languages"
@@ -38,7 +45,8 @@ class Language(Base):
         server_default=text("CURRENT_TIMESTAMP"),
     )
 
-    #relationship
+    # Relationship
+
     source_terms: Mapped[list["Term"]] = relationship(
         foreign_keys="Term.src_lang_id",
         back_populates="source_language",
@@ -48,6 +56,17 @@ class Language(Base):
         foreign_keys="Term.trg_lang_id",
         back_populates="target_language",
     )
+
+    source_users: Mapped[list["User"]] = relationship(
+        foreign_keys="User.src_lang_id",
+        back_populates="source_language",
+    )
+
+    target_users: Mapped[list["User"]] = relationship(
+        foreign_keys="User.trg_lang_id",
+        back_populates="target_language",
+    )
+
 
     def __repr__(self) -> str:
         return (
