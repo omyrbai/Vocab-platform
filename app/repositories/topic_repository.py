@@ -43,6 +43,24 @@ class TopicRepository(
 
         return self.session.scalar(stmt)
 
+    def get_by_parent_and_name(
+        self,
+        parent_topic_id: int | None,
+        name: str,
+    ) -> Topic | None:
+        """
+        Get a topic by parent topic ID and  name.
+        """
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.parent_topic_id == parent_topic_id,
+                self.model.name == name,
+            )
+        )
+
+        return self.session.scalar(stmt)
+
     def get_all(
             self,
     ) -> Sequence[Topic]:

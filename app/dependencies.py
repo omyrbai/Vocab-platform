@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 
+from app.importers.telegram_importer import TelegramImporter
+
 from app.repositories.language_repository import LanguageRepository
 from app.repositories.topic_repository import TopicRepository
 from app.repositories.term_repository import TermRepository

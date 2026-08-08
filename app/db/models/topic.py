@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
+    UniqueConstraint,
     ForeignKey,
     String,
     Text,
@@ -61,6 +62,14 @@ class Topic(Base):
 
     terms: Mapped[list["Term"]] = relationship(
         back_populates="topic",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "parent_topic_id",
+            "name",
+            name="uq_topic_parent_name",
+        ),
     )
 
     def __repr__(self) -> str:
