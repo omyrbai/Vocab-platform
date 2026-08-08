@@ -2,9 +2,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """
+    Application settings loaded from environment variables.
+    """
     # Telegram
     BOT_TOKEN: str
-    CHANNEL_ID: int
+    GERMAN_CHANNEL_ID: int
 
     # Database
     DB_HOST: str

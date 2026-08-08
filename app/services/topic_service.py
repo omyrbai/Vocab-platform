@@ -34,6 +34,19 @@ class TopicService:
         """
         return self.repository.get_by_name(name)
 
+    def get_by_parent_and_name(
+            self,
+            parent_topic_id: int | None,
+            name: str,
+    ) -> Topic | None:
+        """
+        Get a topic by parent topic ID and name.
+        """
+        return self.repository.get_by_parent_and_name(
+            parent_topic_id=parent_topic_id,
+            name=name,
+        )
+
     def get_all(
             self,
     ) -> Sequence[Topic]:
@@ -49,6 +62,27 @@ class TopicService:
         """
         Create a new topic.
         """
+
+        if create_data.parent_topic_id is not None:
+            parent_topic = self.get(
+                create_data.parent_topic_id,
+            )
+
+            if parent_topic is None:
+                raise ValueError(
+                    "Parent topic not found."
+                )
+
+        existing_topic = self.get_by_parent_and_name(
+            parent_topic_id=create_data.parent_topic_id,
+            name=create_data.name,
+        )
+
+        if existing_topic is not None:
+            raise ValueError(
+                "Topic already exists under this particular parent."
+            )
+
         return self.repository.create(create_data)
 
     def update(

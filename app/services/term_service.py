@@ -1,5 +1,7 @@
 from collections.abc import Sequence
 
+from app.enums.import_action import ImportAction
+
 from app.repositories.language_repository import LanguageRepository
 from app.repositories.term_repository import TermRepository
 from app.repositories.topic_repository import TopicRepository
@@ -212,4 +214,91 @@ class TermService:
         return self.term_repository.get_by_languages(
             src_lang_id=src_lang_id,
             trg_lang_id=trg_lang_id,
+        )
+
+    def find_duplicate(
+            self,
+            topic_id: int | None,
+            src_lang_id: int,
+            trg_lang_id: int,
+            term: str,
+    ) -> Term | None:
+        """
+        Find an existing term with the same unique key.
+        """
+
+        return self.term_repository.find_duplicate(
+            topic_id=topic_id,
+            src_lang_id=src_lang_id,
+            trg_lang_id=trg_lang_id,
+            term=term,
+        )
+
+    def _has_changes(
+            self,
+            db_obj: Term,
+            create_data: TermCreate,
+    ) -> bool:
+        """
+        Check whether the imported data differs from
+        the existing database record.
+        """
+
+        return any([
+            db_obj.definition != create_data.definition,
+            db_obj.example != create_data.example,
+            db_obj.translation != create_data.translation,
+            db_obj.pronunciation != create_data.pronunciation,
+        ])
+
+    def upsert(
+            self,
+            create_data: TermCreate,
+    ) -> tuple[
+        Term,
+        ImportAction,
+    ]:
+        """
+        Create a new term or update an existing one.
+        """
+
+        db_obj = self.find_duplicate(
+            topic_id=create_data.topic_id,
+            src_lang_id=create_data.src_lang_id,
+            trg_lang_id=create_data.trg_lang_id,
+            term=create_data.term,
+        )
+
+        if db_obj is None:
+            return (
+                self.create(create_data),
+                ImportAction.CREATED,
+            )
+
+        if not self._has_changes(
+                db_obj,
+                create_data,
+        ):
+            return (
+                db_obj,
+                ImportAction.SKIPPED,
+            )
+
+        update_data = TermUpdate(
+            **create_data.model_dump(
+                exclude={
+                    "topic_id",
+                    "src_lang_id",
+                    "trg_lang_id",
+                    "term",
+                }
+            )
+        )
+
+        return (
+            self.update(
+                db_obj.term_id,
+                update_data,
+            ),
+            ImportAction.UPDATED,
         )
