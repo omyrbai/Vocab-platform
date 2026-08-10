@@ -142,7 +142,10 @@ class FlashcardService:
                 term,
             )
 
-        self._set_table_borders(table)
+        self._set_table_borders(
+            table,
+            visible=False,
+        )
 
     def _create_table(
             self,
@@ -301,6 +304,7 @@ class FlashcardService:
     def _set_table_borders(
             self,
             table,
+            visible=bool,
     ) -> None:
 
         tbl = table._tbl
@@ -338,18 +342,28 @@ class FlashcardService:
                 )
 
                 borders.append(element)
+            if visible:
+                element.set(
+                    qn("w:val"),
+                    "dotted",
+                )
 
-            element.set(
-                qn("w:val"),
-                "single",
-            )
+                element.set(
+                    qn("w:sz"),
+                    "4",
+                )
 
-            element.set(
-                qn("w:sz"),
-                "8",
-            )
+                element.set(
+                    qn("w:space"),
+                    "0",
+                )
 
-            element.set(
-                qn("w:space"),
-                "0",
-            )
+                element.set(
+                    qn("w:color"),
+                    "D9D9D9",
+                )
+            else:
+                element.set(
+                    qn("w:val"),
+                    "nil",
+                )
