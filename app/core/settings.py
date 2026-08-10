@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     """
     Application settings loaded from environment variables.
     """
+    # OpenAI
+    GROQ_API_KEY: str
+
     # Telegram
     BOT_TOKEN: str
     GERMAN_CHANNEL_ID: int

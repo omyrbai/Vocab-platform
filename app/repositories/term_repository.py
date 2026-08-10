@@ -88,6 +88,19 @@ class TermRepository(
 
         return self.session.scalars(stmt).all()
 
+    def get_latest(self) -> Term | None:
+        """
+        Get the latest term.
+        """
+        stmt = (
+            select(self.model)
+            .order_by(self.model.term_id.desc())
+            .limit(1)
+        )
+
+        return self.session.scalar(stmt)
+
+
     def get_by_languages(
         self,
         *,

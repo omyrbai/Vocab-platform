@@ -4,6 +4,8 @@ from telegram.ext import (
     filters,
 )
 
+from app.ai.vocabulary_generator import VocabularyGenerator
+
 from app.core.settings import settings
 from app.handlers.channel_handler import channel_post
 
@@ -20,7 +22,12 @@ def main() -> None:
         source_language_code="de",
         target_language_code="en",
     )
-
+    generator = VocabularyGenerator(
+        source_language="German",
+        target_language="Russian",
+        definition_language="English",
+        include_pronunciation=False,
+    )
     flashcard_service = FlashcardService()
 
     application = (
@@ -35,6 +42,7 @@ def main() -> None:
             partial(
                 channel_post,
                 importer=importer,
+                generator=generator,
                 flashcard_service=flashcard_service,
             ),
         )

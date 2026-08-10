@@ -216,6 +216,12 @@ class TermService:
             trg_lang_id=trg_lang_id,
         )
 
+    def get_latest(self) -> Term | None:
+        """
+        Get the latest term.
+        """
+        return self.term_repository.get_latest()
+
     def find_duplicate(
             self,
             topic_id: int | None,
