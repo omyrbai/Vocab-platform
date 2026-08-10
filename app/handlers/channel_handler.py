@@ -1,5 +1,3 @@
-import re
-
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -14,6 +12,19 @@ from app.dependencies import (
 
 from app.importers.telegram_importer import TelegramImporter
 from app.services.flashcard_service import FlashcardService
+
+def _remove_html_formatting(text: str) -> str:
+    """
+    Remove Telegram HTML formatting from generated vocabulary.
+    """
+
+    return (
+        text
+        .replace("<b>", "")
+        .replace("</b>", "")
+        .replace("<i>", "")
+        .replace("</i>", "")
+    )
 
 def _is_raw_vocabulary_list(
     text: str,
@@ -33,13 +44,6 @@ def _is_raw_vocabulary_list(
 
     # A topic is handled by TelegramImporter.
     if lines[0].startswith("#"):
-        return False
-
-    # Every non-empty line must be a numbered bold term.
-    if any(
-        re.match(r"^\d+\.\s+\*\*.+\*\*$", line)
-        for line in lines
-    ):
         return False
 
     return True
@@ -102,7 +106,7 @@ async def channel_post(
 
         print("Generated vocabulary posted to channel.")
 
-        text = generated_text
+        text = _remove_html_formatting(generated_text)
 
     with SessionLocal() as session:
         try:

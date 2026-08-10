@@ -2,7 +2,7 @@ import re
 from app.schemas.parsed_term import ParsedTerm
 
 _TERM_PATTERN = re.compile(
-    r"^\d+\.\s*(.+)$"
+    r"^\d+\.\s+(.+)$"
 )
 
 def _extract_term(
