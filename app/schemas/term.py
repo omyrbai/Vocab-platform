@@ -11,6 +11,10 @@ class TermBase(BaseModel):
         min_length=1,
         max_length=255,
     )
+    gender: str | None = Field(
+        default=None,
+        max_length=1,
+    )
     pronunciation: str | None = Field(
         default=None,
         max_length=255,
@@ -39,6 +43,10 @@ class TermUpdate(BaseModel):
         default=None,
         min_length=1,
         max_length=255,
+    )
+    gender: str | None = Field(
+        default=None,
+        max_length=1,
     )
     pronunciation: str | None = Field(
         default=None,

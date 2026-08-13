@@ -27,6 +27,11 @@ class Term(Base):
         autoincrement=True,
     )
 
+    gender: Mapped[str | None] = mapped_column(
+        String(1),
+        nullable=True,
+    )
+
     topic_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey(

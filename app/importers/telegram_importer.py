@@ -168,6 +168,7 @@ class TelegramImporter:
                 src_lang_id=src_lang.lang_id,
                 trg_lang_id=trg_lang.lang_id,
                 term=parsed_term.term,
+                gender=parsed_term.gender,
                 pronunciation=None,
                 definition=parsed_term.definition,
                 example=parsed_term.example,

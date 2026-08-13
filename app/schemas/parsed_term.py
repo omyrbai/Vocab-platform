@@ -8,6 +8,7 @@ class ParsedTerm(BaseModel):
     """
 
     term: str
+    gender: str | None = None
     definition: str
     example: str
     translation: str

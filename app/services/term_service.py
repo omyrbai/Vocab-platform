@@ -251,6 +251,7 @@ class TermService:
         """
 
         return any([
+            db_obj.gender != create_data.gender,
             db_obj.definition != create_data.definition,
             db_obj.example != create_data.example,
             db_obj.translation != create_data.translation,

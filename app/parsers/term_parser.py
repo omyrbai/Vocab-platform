@@ -23,6 +23,28 @@ def _extract_term(
 
     return match.group(1).strip()
 
+def _extract_gender_and_definition(
+    definition: str,
+) -> tuple[str | None, str]:
+    """
+    Extract gender from a definition when present.
+    """
+
+    if " - " not in definition:
+        return None, definition.strip()
+
+    prefix, actual_definition = definition.split(
+        " - ",
+        1,
+    )
+
+    prefix = prefix.strip()
+
+    if prefix in {"M", "F", "N"}:
+        return prefix, actual_definition.strip()
+
+    return None, definition.strip()
+
 def parse_terms(
         text: str,
 ) -> list[ParsedTerm]:
@@ -51,10 +73,15 @@ def parse_terms(
                 f"Expected numbered term line, got: {lines[i]}"
             )
 
+        gender, definition = _extract_gender_and_definition(
+            lines[i+1]
+        )
+
         terms.append(
             ParsedTerm(
                 term=_extract_term(lines[i]),
-                definition=lines[i + 1],
+                gender=gender,
+                definition=definition,
                 example=lines[i + 2],
                 translation=lines[i + 3],
             )
