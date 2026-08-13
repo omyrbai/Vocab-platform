@@ -1,7 +1,5 @@
 from sqlalchemy.orm import Session
 
-from app.importers.telegram_importer import TelegramImporter
-
 from app.repositories.language_repository import LanguageRepository
 from app.repositories.topic_repository import TopicRepository
 from app.repositories.term_repository import TermRepository
@@ -11,7 +9,6 @@ from app.services.language_service import LanguageService
 from app.services.topic_service import TopicService
 from app.services.term_service import TermService
 from app.services.user_service import UserService
-
 
 def get_user_service(
     session: Session,
