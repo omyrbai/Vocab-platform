@@ -26,8 +26,16 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     telegram_id: int | None = None
-    username: str | None = None
-    first_name: str | None = None
+    username: str | None = Field(
+        default=None,
+        max_length=255,
+    )
+
+    first_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+    )
     src_lang_id: int | None = None
     trg_lang_id: int | None = None
 

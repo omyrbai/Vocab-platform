@@ -56,3 +56,29 @@ class LanguageRepository(
         )
 
         return self.session.scalars(stmt).all()
+
+    def find_duplicate(
+        self,
+        lang_code: str,
+        language_name: str,
+        exclude_lang_id: int | None = None,
+    ) -> Language | None:
+        """
+        Find a language with the same code or name
+        excluding a specific language id if provided.
+        """
+
+        stmt = (
+            select(self.model)
+            .where(
+                (self.model.lang_code == lang_code)
+                | (self.model.language_name == language_name)
+            )
+        )
+
+        if exclude_lang_id is not None:
+            stmt = stmt.where(
+                self.model.lang_id != exclude_lang_id
+            )
+
+        return self.session.scalar(stmt)

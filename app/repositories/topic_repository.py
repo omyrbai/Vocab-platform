@@ -74,3 +74,28 @@ class TopicRepository(
         )
 
         return self.session.scalars(stmt).all()
+
+    def find_duplicate(
+            self,
+            parent_topic_id: int | None,
+            name: str,
+            exclude_topic_id: int | None,
+    ) -> Topic | None:
+        """
+        Find a topic with the same parent and name, excluding a specific topic if provided.
+        """
+
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.parent_topic_id == parent_topic_id,
+                self.model.name == name,
+            )
+        )
+
+        if exclude_topic_id is not None:
+            stmt = stmt.where(
+                self.model.topic_id != exclude_topic_id
+            )
+
+        return self.session.scalar(stmt)

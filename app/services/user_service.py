@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 
 from app.db.models.user import User
+from app.exceptions import ConflictError, NotFoundError
+from app.repositories.language_repository import LanguageRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import (
     UserCreate,
@@ -11,10 +13,12 @@ from app.schemas.user import (
 class UserService:
 
     def __init__(
-            self,
-            repository: UserRepository,
+        self,
+        repository: UserRepository,
+        language_repository: LanguageRepository,
     ):
         self.repository = repository
+        self.language_repository = language_repository
 
     def get(
             self,
@@ -67,8 +71,37 @@ class UserService:
             )
 
             if existing_user is not None:
-                raise ValueError(
+                raise ConflictError(
                     "Telegram user already exists."
+                )
+        if create_data.username is not None:
+            existing_user = self.repository.get_by_username(
+                create_data.username
+            )
+
+            if existing_user is not None:
+                raise ConflictError(
+                    "Username already exists."
+                )
+
+        if create_data.src_lang_id is not None:
+            language = self.language_repository.get(
+                create_data.src_lang_id
+            )
+
+            if language is None:
+                raise NotFoundError(
+                    "Source language not found."
+                )
+
+        if create_data.trg_lang_id is not None:
+            language = self.language_repository.get(
+                create_data.trg_lang_id
+            )
+
+            if language is None:
+                raise NotFoundError(
+                    "Target language not found."
                 )
 
         return self.repository.create(create_data)
@@ -85,9 +118,78 @@ class UserService:
         db_obj = self.repository.get(user_id)
 
         if db_obj is None:
-            raise ValueError(
+            raise NotFoundError(
                 "User not found."
             )
+        telegram_id = (
+            update_data.telegram_id
+            if update_data.telegram_id is not None
+            else db_obj.telegram_id
+        )
+
+        username = (
+            update_data.username
+            if update_data.username is not None
+            else db_obj.username
+        )
+
+        src_lang_id = (
+            update_data.src_lang_id
+            if update_data.src_lang_id is not None
+            else db_obj.src_lang_id
+        )
+
+        trg_lang_id = (
+            update_data.trg_lang_id
+            if update_data.trg_lang_id is not None
+            else db_obj.trg_lang_id
+        )
+
+        if telegram_id is not None:
+            existing_user = self.repository.get_by_telegram_id(
+                telegram_id
+            )
+
+            if (
+                existing_user is not None
+                and existing_user.user_id != db_obj.user_id
+            ):
+                raise ConflictError(
+                    "Telegram user already exists."
+                )
+
+        if username is not None:
+            existing_user = self.repository.get_by_username(
+                username
+            )
+
+            if (
+                existing_user is not None
+                and existing_user.user_id != db_obj.user_id
+            ):
+                raise ConflictError(
+                    "Username already exists."
+                )
+
+        if src_lang_id is not None:
+            language = self.language_repository.get(
+                src_lang_id
+            )
+
+            if language is None:
+                raise NotFoundError(
+                    "Source language not found."
+                )
+
+        if trg_lang_id is not None:
+            language = self.language_repository.get(
+                trg_lang_id
+            )
+
+            if language is None:
+                raise NotFoundError(
+                    "Target language not found."
+                )
 
         return self.repository.update(
             db_obj,
@@ -105,7 +207,7 @@ class UserService:
         db_obj = self.repository.get(user_id)
 
         if db_obj is None:
-            raise ValueError(
+            raise NotFoundError(
                 "User not found."
             )
 

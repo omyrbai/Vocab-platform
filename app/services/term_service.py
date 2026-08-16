@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 
+from app.exceptions import ConflictError, NotFoundError
 from app.enums.import_action import ImportAction
 
 from app.repositories.language_repository import LanguageRepository
@@ -11,6 +12,7 @@ from app.schemas.term import (
 )
 
 from app.db.models.term import Term
+from app.exceptions import ConflictError, NotFoundError
 
 class TermService:
 
@@ -36,7 +38,7 @@ class TermService:
         )
 
         if src_language is None:
-            raise ValueError(
+            raise NotFoundError(
                 "Source language not found."
             )
 
@@ -45,7 +47,7 @@ class TermService:
         )
 
         if trg_language is None:
-            raise ValueError(
+            raise NotFoundError(
                 "Target language not found."
             )
 
@@ -55,7 +57,7 @@ class TermService:
             )
 
             if topic is None:
-                raise ValueError(
+                raise NotFoundError(
                     "Topic not found."
                 )
 
@@ -67,7 +69,7 @@ class TermService:
         )
 
         if existing_term is not None:
-            raise ValueError(
+            raise ConflictError(
                 "Term already exists in the selected context."
             )
 
@@ -83,7 +85,7 @@ class TermService:
         db_obj = self.term_repository.get(term_id)
 
         if db_obj is None:
-            raise ValueError(
+            raise NotFoundError(
                 "Term not found."
             )
 
@@ -109,7 +111,7 @@ class TermService:
             topic = self.topic_repository.get(topic_id)
 
             if topic is None:
-                raise ValueError(
+                raise NotFoundError(
                     "Topic not found."
                 )
 
@@ -122,14 +124,14 @@ class TermService:
         src_language = self.language_repository.get(src_lang_id)
 
         if src_language is None:
-            raise ValueError(
+            raise NotFoundError(
                 "Source language not found."
             )
 
         trg_language = self.language_repository.get(trg_lang_id)
 
         if trg_language is None:
-            raise ValueError(
+            raise NotFoundError(
                 "Target language not found."
             )
 
@@ -144,7 +146,7 @@ class TermService:
         )
 
         if existing_term is not None:
-            raise ValueError(
+            raise ConflictError(
                 "Term already exists in the selected context."
             )
 
@@ -160,7 +162,7 @@ class TermService:
         db_obj = self.term_repository.get(term_id)
 
         if db_obj is None:
-            raise ValueError(
+            raise NotFoundError(
                 "Term not found."
             )
 
@@ -212,6 +214,22 @@ class TermService:
         Get terms filtered by source and target language.
         """
         return self.term_repository.get_by_languages(
+            src_lang_id=src_lang_id,
+            trg_lang_id=trg_lang_id,
+        )
+
+    def get_filtered(
+            self,
+            *,
+            topic_id: int | None = None,
+            src_lang_id: int | None = None,
+            trg_lang_id: int | None = None,
+    ) -> Sequence[Term]:
+        """
+        Get terms filtered by topic and/or language pair.
+        """
+        return self.term_repository.get_filtered(
+            topic_id=topic_id,
             src_lang_id=src_lang_id,
             trg_lang_id=trg_lang_id,
         )

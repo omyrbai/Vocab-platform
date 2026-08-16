@@ -19,6 +19,12 @@ from sqlalchemy.orm import (
 from app.db.database import Base
 from app.db.models.language import Language
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.db.models.user_identity import UserIdentity
+    from app.db.models.refresh_token import RefreshToken
+
 
 class User(Base):
     __tablename__ = "users"
@@ -36,6 +42,7 @@ class User(Base):
 
     username:  Mapped[str | None] = mapped_column(
         String(255),
+        unique=True,
         nullable=True,
     )
 
@@ -69,6 +76,16 @@ class User(Base):
     target_language: Mapped[Language | None] = relationship(
         foreign_keys=[trg_lang_id],
         back_populates="target_users",
+    )
+
+    identities: Mapped[list["UserIdentity"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

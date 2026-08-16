@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 
 from app.db.models.topic import Topic
+from app.exceptions import ConflictError, NotFoundError
 from app.repositories.topic_repository import TopicRepository
 from app.schemas.topic import (
     TopicCreate,
@@ -69,7 +70,7 @@ class TopicService:
             )
 
             if parent_topic is None:
-                raise ValueError(
+                raise NotFoundError(
                     "Parent topic not found."
                 )
 
@@ -79,7 +80,7 @@ class TopicService:
         )
 
         if existing_topic is not None:
-            raise ValueError(
+            raise ConflictError(
                 "Topic already exists under this particular parent."
             )
 
@@ -93,6 +94,42 @@ class TopicService:
         """
         Update a topic.
         """
+
+        parent_topic_id = (
+            update_data.parent_topic_id
+            if update_data.parent_topic_id is not None
+            else db_obj.parent_topic_id
+        )
+
+        name = (
+            update_data.name
+            if update_data.name is not None
+            else db_obj.name
+        )
+
+        if parent_topic_id is not None:
+            parent_topic = self.get(parent_topic_id)
+
+            if parent_topic is None:
+                raise NotFoundError(
+                    "Parent topic not found."
+                )
+        if parent_topic_id == db_obj.topic_id:
+            raise ConflictError(
+                "A topic cannot be its own parent."
+            )
+
+        existing_topic = self.find_duplicate(
+            parent_topic_id=parent_topic_id,
+            name=name,
+            exclude_topic_id=db_obj.topic_id,
+        )
+
+        if existing_topic is not None:
+            raise ConflictError(
+                "Topic already exists under this particular parent."
+            )
+
         return self.repository.update(
             db_obj,
             update_data,
@@ -106,3 +143,19 @@ class TopicService:
         Delete a topic.
         """
         self.repository.delete(db_obj)
+
+    def find_duplicate(
+        self,
+        parent_topic_id: int | None,
+        name: str,
+        exclude_topic_id: int | None,
+    ) -> Topic | None:
+        """
+        Find a topic under the same parent.
+        """
+
+        return self.repository.find_duplicate(
+            parent_topic_id=parent_topic_id,
+            name=name,
+            exclude_topic_id=exclude_topic_id,
+        )

@@ -23,7 +23,13 @@ class Settings(BaseSettings):
     APP_NAME: str = "Vocab Platform"
     DEBUG: bool = False
 
+    # Authentication
+    JWT_PRIVATE_KEY_PATH: str = "secrets/jwt_private.pem"
+    JWT_PUBLIC_KEY_PATH: str = "secrets/jwt_public.pem"
+    JWT_ALGORITHM: str = "RS256"
 
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",

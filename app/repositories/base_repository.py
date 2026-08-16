@@ -55,6 +55,8 @@ class BaseRepository(Generic[
     def create(
             self,
             create_data: CreateSchemaType,
+            *,
+            commit: bool = True,
     ) -> ModelType:
         """
         Create a new database object.
@@ -63,8 +65,12 @@ class BaseRepository(Generic[
             **create_data.model_dump()
         )
         self.session.add(db_obj)
-        self.session.commit()
-        self.session.refresh(db_obj)
+
+        if commit:
+            self.session.commit()
+            self.session.refresh(db_obj)
+        else:
+            self.session.flush()
 
         return db_obj
 

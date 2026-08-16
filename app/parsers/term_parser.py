@@ -18,7 +18,7 @@ def _extract_term(
 
     if match is None:
         raise ValueError(
-            f"Invalid term line.{line}"
+            f"Invalid term line: {line}"
         )
 
     return match.group(1).strip()

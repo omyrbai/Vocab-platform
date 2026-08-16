@@ -132,6 +132,37 @@ class TermRepository(
 
         return self.session.scalars(stmt).all()
 
+    def get_filtered(
+            self,
+            *,
+            topic_id: int | None = None,
+            src_lang_id: int | None = None,
+            trg_lang_id: int | None = None,
+    ) -> Sequence[Term]:
+        """
+        Get terms filtered by topic and/or language pair.
+        """
+        stmt = select(self.model)
+
+        if topic_id is not None:
+            stmt = stmt.where(
+                self.model.topic_id == topic_id
+            )
+
+        if src_lang_id is not None:
+            stmt = stmt.where(
+                self.model.src_lang_id == src_lang_id
+            )
+
+        if trg_lang_id is not None:
+            stmt = stmt.where(
+                self.model.trg_lang_id == trg_lang_id
+            )
+
+        stmt = stmt.order_by(self.model.term)
+
+        return self.session.scalars(stmt).all()
+
     def find_duplicate(
         self,
         *,

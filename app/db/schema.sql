@@ -9,7 +9,7 @@ CREATE TABLE `languages` (
   PRIMARY KEY (`lang_id`),
   UNIQUE KEY `uq_languages_code` (`lang_code`),
   UNIQUE KEY `uq_languages_name` (`language_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- vocab_platform.topics definition
@@ -21,8 +21,29 @@ CREATE TABLE `topics` (
   `description` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`topic_id`),
+  UNIQUE KEY `uq_topic_parent_name` (`parent_topic_id`,`name`),
   KEY `fk_topics_parent` (`parent_topic_id`),
   CONSTRAINT `fk_topics_parent` FOREIGN KEY (`parent_topic_id`) REFERENCES `topics` (`topic_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- vocab_platform.users definition
+
+CREATE TABLE `users` (
+  `user_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `telegram_id` bigint(20) DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
+  `first_name` varchar(255) NOT NULL,
+  `src_lang_id` smallint(5) unsigned DEFAULT NULL,
+  `trg_lang_id` smallint(5) unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `telegram_id` (`telegram_id`),
+  UNIQUE KEY `uq_users_username` (`username`),
+  KEY `fk_users_src_language` (`src_lang_id`),
+  KEY `fk_users_trg_language` (`trg_lang_id`),
+  CONSTRAINT `fk_users_src_language` FOREIGN KEY (`src_lang_id`) REFERENCES `languages` (`lang_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_users_trg_language` FOREIGN KEY (`trg_lang_id`) REFERENCES `languages` (`lang_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -30,6 +51,7 @@ CREATE TABLE `topics` (
 
 CREATE TABLE `terms` (
   `term_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `gender` varchar(1) DEFAULT NULL,
   `topic_id` bigint(20) unsigned DEFAULT NULL,
   `src_lang_id` smallint(5) unsigned NOT NULL,
   `trg_lang_id` smallint(5) unsigned NOT NULL,
@@ -47,4 +69,4 @@ CREATE TABLE `terms` (
   CONSTRAINT `fk_terms_src_lang` FOREIGN KEY (`src_lang_id`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE,
   CONSTRAINT `fk_terms_topic` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`topic_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_terms_trg_lang` FOREIGN KEY (`trg_lang_id`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=94 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

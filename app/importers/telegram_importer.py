@@ -1,7 +1,7 @@
 import re
 
 from app.enums.import_message_type import ImportMessageType
-
+from app.exceptions import NotFoundError
 from app.parsers.term_parser import parse_terms
 
 from app.schemas.import_result import ImportResult
@@ -147,7 +147,7 @@ class TelegramImporter:
         )
 
         if src_lang is None:
-            raise ValueError(
+            raise NotFoundError(
                 f"Language '{self.source_language_code}' not found."
             )
 
