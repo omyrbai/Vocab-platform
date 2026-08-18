@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_db, get_current_user
+from app.db.models.user import User
 from app.dependencies import get_user_service
 from app.exceptions import ConflictError, NotFoundError
 from app.schemas.user import (
@@ -23,6 +24,7 @@ router = APIRouter(
 )
 def get_users(
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     user_service = get_user_service(session)
 
@@ -35,6 +37,7 @@ def get_users(
 def get_user(
     user_id: int,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     user_service = get_user_service(session)
 
@@ -56,6 +59,7 @@ def get_user(
 def create_user(
     create_data: UserCreate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     user_service = get_user_service(session)
 
@@ -82,6 +86,7 @@ def update_user(
     user_id: int,
     update_data: UserUpdate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     user_service = get_user_service(session)
 
@@ -110,6 +115,7 @@ def update_user(
 def delete_user(
     user_id: int,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     user_service = get_user_service(session)
 

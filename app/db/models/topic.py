@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -16,6 +17,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
 
+if TYPE_CHECKING:
+    from app.db.models.user import User
+
 
 class Topic(Base):
     __tablename__ = "topics"
@@ -25,6 +29,17 @@ class Topic(Base):
         primary_key=True,
         autoincrement=True,
     )
+
+    user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(
+            "users.user_id",
+            ondelete="CASCADE",
+            onupdate="CASCADE",
+        ),
+        nullable=False,
+    )
+
     parent_topic_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey(
@@ -62,6 +77,10 @@ class Topic(Base):
 
     terms: Mapped[list["Term"]] = relationship(
         back_populates="topic",
+    )
+
+    owner: Mapped["User"] = relationship(
+        back_populates="topics",
     )
 
     __table_args__ = (

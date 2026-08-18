@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.exceptions import ConflictError, NotFoundError
-from app.api.dependencies import get_db
+from app.api.dependencies import get_db, get_current_user
+from app.db.models.user import User
 from app.dependencies import get_topic_service
 from app.schemas.topic import TopicRead, TopicCreate, TopicUpdate
 
@@ -16,6 +17,7 @@ router = APIRouter(
 )
 def get_topics(
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     topic_service = get_topic_service(session)
 
@@ -28,6 +30,7 @@ def get_topics(
 def get_topic(
     topic_id: int,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     topic_service = get_topic_service(session)
 
@@ -49,6 +52,7 @@ def get_topic(
 def create_topic(
     create_data: TopicCreate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     topic_service = get_topic_service(session)
 
@@ -73,6 +77,7 @@ def update_topic(
     topic_id: int,
     update_data: TopicUpdate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     topic_service = get_topic_service(session)
 
@@ -108,6 +113,7 @@ def update_topic(
 def delete_topic(
     topic_id: int,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     topic_service = get_topic_service(session)
 

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_db, get_current_user
+from app.db.models.user import User
 from app.dependencies import get_language_service
 from app.exceptions import ConflictError
 from app.schemas.language import (
@@ -20,7 +21,8 @@ router = APIRouter(
     response_model=list[LanguageRead],
 )
 def get_languages(
-        session: Session = Depends(get_db),
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     language_service = get_language_service(session)
 
@@ -33,6 +35,7 @@ def get_languages(
 def get_language(
     lang_id: int,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     language_service = get_language_service(session)
 
@@ -53,6 +56,7 @@ def get_language(
 def create_language(
     create_data: LanguageCreate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     language_service = get_language_service(session)
 
@@ -72,6 +76,7 @@ def update_language(
     lang_id: int,
     update_data: LanguageUpdate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     language_service = get_language_service(session)
     language = language_service.get(lang_id)
@@ -101,6 +106,7 @@ def update_language(
 def delete_language(
     lang_id: int,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     language_service = get_language_service(session)
 

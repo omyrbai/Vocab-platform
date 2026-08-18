@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.db.models.user_identity import UserIdentity
     from app.db.models.refresh_token import RefreshToken
-
+    from app.db.models.topic import Topic
 
 class User(Base):
     __tablename__ = "users"
@@ -76,6 +76,10 @@ class User(Base):
     target_language: Mapped[Language | None] = relationship(
         foreign_keys=[trg_lang_id],
         back_populates="target_users",
+    )
+
+    topics: Mapped[list["Topic"]] = relationship(
+        back_populates="owner",
     )
 
     identities: Mapped[list["UserIdentity"]] = relationship(

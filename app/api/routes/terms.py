@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_db, get_current_user
+from app.db.models.user import User
 from app.dependencies import get_term_service
 from app.exceptions import ConflictError, NotFoundError
 from app.schemas.term import TermRead, TermCreate, TermUpdate
@@ -20,6 +21,7 @@ def get_terms(
     src_lang_id: int | None = None,
     trg_lang_id: int | None = None,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     term_service = get_term_service(session)
 
@@ -37,6 +39,7 @@ def get_terms(
 def create_term(
     create_data: TermCreate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     term_service = get_term_service(session)
     try:
@@ -58,8 +61,9 @@ def create_term(
     response_model=TermRead,
 )
 def get_term(
-        term_id: int,
-        session: Session = Depends(get_db),
+    term_id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     term_service = get_term_service(session)
 
@@ -81,6 +85,7 @@ def update_term(
     term_id: int,
     update_data: TermUpdate,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     term_service = get_term_service(session)
 
@@ -109,6 +114,7 @@ def update_term(
 def delete_term(
     term_id: int,
     session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     term_service = get_term_service(session)
 
