@@ -1,0 +1,168 @@
+Folder PATH listing for volume Personal
+Volume serial number is 44EC-3D4F
+G:\PROJECTS\PYPROJECTS\VOCAB-PLATFORM\APP
+|   dependencies.py
+|   exceptions.py
+|   __init__.py
+|   
++---ai
+|   |   vocabulary_generator.py
+|   |   
+|   \---__pycache__
+|           vocabulary_generator.cpython-313.pyc
+|           
++---api
+|   |   dependencies.py
+|   |   main.py
+|   |   __init__.py
+|   |   
+|   +---routes
+|   |   |   languages.py
+|   |   |   terms.py
+|   |   |   topics.py
+|   |   |   __init__.py
+|   |   |   
+|   |   \---__pycache__
+|   |           languages.cpython-313.pyc
+|   |           terms.cpython-313.pyc
+|   |           topics.cpython-313.pyc
+|   |           __init__.cpython-313.pyc
+|   |           
+|   \---__pycache__
+|           dependencies.cpython-313.pyc
+|           main.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---core
+|   |   security.py
+|   |   settings.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           settings.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---db
+|   |   database.py
+|   |   schema.sql
+|   |   __init__.py
+|   |   
+|   +---models
+|   |   |   language.py
+|   |   |   term.py
+|   |   |   topic.py
+|   |   |   user.py
+|   |   |   __init__.py
+|   |   |   
+|   |   \---__pycache__
+|   |           language.cpython-313.pyc
+|   |           term.cpython-313.pyc
+|   |           topic.cpython-313.pyc
+|   |           user.cpython-313.pyc
+|   |           __init__.cpython-313.pyc
+|   |           
+|   \---__pycache__
+|           database.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---enums
+|   |   import_action.py
+|   |   import_message_type.py
+|   |   
+|   \---__pycache__
+|           import_action.cpython-313.pyc
+|           import_message_type.cpython-313.pyc
+|           
++---handlers
+|   |   channel_handler.py
+|   |   start.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           channel_handler.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---importers
+|   |   german_importer.py
+|   |   telegram_importer.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           telegram_importer.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---parsers
+|   |   term_parser.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           term_parser.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---repositories
+|   |   base_repository.py
+|   |   language_repository.py
+|   |   term_repository.py
+|   |   topic_repository.py
+|   |   user_repository.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           base_repository.cpython-313.pyc
+|           language_repository.cpython-313.pyc
+|           term_repository.cpython-313.pyc
+|           topic_repository.cpython-313.pyc
+|           user_repository.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---schemas
+|   |   import_result.py
+|   |   language.py
+|   |   parsed_term.py
+|   |   term.py
+|   |   topic.py
+|   |   upsert_result.py
+|   |   user.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           import_result.cpython-313.pyc
+|           language.cpython-313.pyc
+|           parsed_term.cpython-313.pyc
+|           term.cpython-313.pyc
+|           topic.cpython-313.pyc
+|           upsert_result.cpython-313.pyc
+|           user.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---services
+|   |   flashcard_service.py
+|   |   language_service.py
+|   |   term_service.py
+|   |   topic_service.py
+|   |   user_service.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           flashcard_service.cpython-313.pyc
+|           language_service.cpython-313.pyc
+|           term_service.cpython-313.pyc
+|           topic_service.cpython-313.pyc
+|           user_service.cpython-313.pyc
+|           __init__.cpython-313.pyc
+|           
++---telegram
+|       bot.py
+|       handlers.py
+|       __init__.py
+|       
++---utils
+|       helpers.py
+|       logging.py
+|       text.py
+|       
+\---__pycache__
+        dependencies.cpython-313.pyc
+        exceptions.cpython-313.pyc
+        __init__.cpython-313.pyc
+        
