@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class TermBase(BaseModel):
-    topic_id: int | None = None
+    topic_id: int
     src_lang_id: int
     trg_lang_id: int
     term: str = Field(

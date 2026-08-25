@@ -12,7 +12,10 @@ from app.core.security import (
 
 from app.core.settings import settings
 from app.enums.auth_provider import AuthProvider
-from app.exceptions import ConflictError
+from app.exceptions import (
+    AuthenticationError,
+    ConflictError,
+)
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.repositories.user_identity_repository import UserIdentityRepository
 from app.repositories.user_repository import UserRepository
@@ -139,7 +142,7 @@ class AuthService:
             identity.password_hash,
         )
         ):
-            raise ValueError(
+            raise AuthenticationError(
                 "Invalid email or password."
             )
 
@@ -156,25 +159,18 @@ class AuthService:
             )
         )
 
-        try:
-            self.refresh_token_repository.create(
-                RefreshTokenCreate(
-                    user_id=identity.user_id,
-                    token_hash=refresh_token_hash,
-                    expires_at=expires_at,
-                ),
-                commit=False,
+        self.refresh_token_repository.create(
+            RefreshTokenCreate(
+                user_id=identity.user_id,
+                token_hash=refresh_token_hash,
+                expires_at=expires_at,
             )
+        )
 
-            access_token = create_access_token(
-                identity.user_id,
-            )
+        access_token = create_access_token(
+            identity.user_id,
+        )
 
-            self.session.commit()
-
-        except Exception:
-            self.session.rollback()
-            raise
 
         return TokenResponse(
             access_token=access_token,
@@ -182,8 +178,8 @@ class AuthService:
         )
 
     def refresh(
-            self,
-            refresh_token: str,
+        self,
+        refresh_token: str,
     ) -> TokenResponse:
         """
         Rotate a refresh token and issue new tokens.
@@ -203,13 +199,14 @@ class AuthService:
         )
 
         if db_token is None:
-            raise ValueError(
+            raise AuthenticationError(
                 "Invalid refresh token."
             )
 
         try:
             self.refresh_token_repository.revoke(
                 db_token,
+                commit=False,
             )
 
             new_refresh_token = generate_refresh_token()
@@ -272,13 +269,7 @@ class AuthService:
         if db_token.revoked_at is not None:
             return
 
-        try:
-            self.refresh_token_repository.revoke(
-                db_token,
-            )
+        self.refresh_token_repository.revoke(
+            db_token,
+        )
 
-            self.session.commit()
-
-        except Exception:
-            self.session.rollback()
-            raise

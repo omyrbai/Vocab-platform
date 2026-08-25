@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db, get_current_user
 from app.db.models.user import User
+from app.enums.user_role import UserRole
 from app.dependencies import get_term_service
-from app.exceptions import ConflictError, NotFoundError
+from app.exceptions import NotFoundError
 from app.schemas.term import TermRead, TermCreate, TermUpdate
 
 router = APIRouter(
@@ -12,6 +13,13 @@ router = APIRouter(
     tags=["Terms"],
 )
 
+def get_term_user_id(
+    current_user: User,
+) -> int | None:
+    if current_user.role == UserRole.ADMIN:
+        return None
+
+    return current_user.user_id
 @router.get(
     "/",
     response_model=list[TermRead],
@@ -26,6 +34,7 @@ def get_terms(
     term_service = get_term_service(session)
 
     return term_service.get_filtered(
+        user_id=get_term_user_id(current_user),
         topic_id=topic_id,
         src_lang_id=src_lang_id,
         trg_lang_id=trg_lang_id,
@@ -42,19 +51,11 @@ def create_term(
     current_user: User = Depends(get_current_user),
 ):
     term_service = get_term_service(session)
-    try:
-        return term_service.create(create_data)
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
 
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
+    return term_service.create(
+        user_id=get_term_user_id(current_user),
+        create_data=create_data,
+    )
 
 @router.get(
     "/{term_id}",
@@ -67,12 +68,14 @@ def get_term(
 ):
     term_service = get_term_service(session)
 
-    term = term_service.get(term_id)
+    term = term_service.get(
+        user_id=get_term_user_id(current_user),
+        term_id=term_id,
+    )
 
     if term is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Term not found.",
+        raise NotFoundError(
+            "Term not found."
         )
 
     return term
@@ -89,23 +92,12 @@ def update_term(
 ):
     term_service = get_term_service(session)
 
-    try:
-        return term_service.update(
-            term_id,
-            update_data,
-        )
 
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
-
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
+    return term_service.update(
+        user_id=get_term_user_id(current_user),
+        term_id=term_id,
+        update_data=update_data,
+    )
 
 @router.delete(
     "/{term_id}",
@@ -118,11 +110,7 @@ def delete_term(
 ):
     term_service = get_term_service(session)
 
-    try:
-        term_service.delete(term_id)
-
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
+    term_service.delete(
+        user_id=get_term_user_id(current_user),
+        term_id=term_id,
+    )

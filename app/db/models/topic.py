@@ -85,9 +85,10 @@ class Topic(Base):
 
     __table_args__ = (
         UniqueConstraint(
+            "user_id",
             "parent_topic_id",
             "name",
-            name="uq_topic_parent_name",
+            name="uq_topic_user_parent_name",
         ),
     )
 

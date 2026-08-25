@@ -53,10 +53,10 @@ class BaseRepository(Generic[
         return self.session.scalar(stmt)
 
     def create(
-            self,
-            create_data: CreateSchemaType,
-            *,
-            commit: bool = True,
+        self,
+        create_data: CreateSchemaType,
+        *,
+        commit: bool = True,
     ) -> ModelType:
         """
         Create a new database object.
@@ -65,19 +65,20 @@ class BaseRepository(Generic[
             **create_data.model_dump()
         )
         self.session.add(db_obj)
+        self.session.flush()
 
         if commit:
             self.session.commit()
             self.session.refresh(db_obj)
-        else:
-            self.session.flush()
 
         return db_obj
 
     def update(
-            self,
-            db_obj: ModelType,
-            update_data: UpdateSchemaType,
+        self,
+        db_obj: ModelType,
+        update_data: UpdateSchemaType,
+        *,
+        commit: bool = True,
     ) -> ModelType:
         """
         Update a database object.
@@ -86,23 +87,33 @@ class BaseRepository(Generic[
         update_values = update_data.model_dump(
             exclude_unset=True,
         )
+
         for field, value in update_values.items():
             setattr(
                 db_obj,
                 field,
                 value,
             )
-        self.session.commit()
-        self.session.refresh(db_obj)
+
+        self.session.flush()
+
+        if commit:
+            self.session.commit()
+            self.session.refresh(db_obj)
 
         return db_obj
 
     def delete(
-            self,
-            db_obj: ModelType,
+        self,
+        db_obj: ModelType,
+        *,
+        commit: bool = True,
     ) -> None:
         """
         Delete a database object.
         """
         self.session.delete(db_obj)
-        self.session.commit()
+        self.session.flush()
+
+        if commit:
+            self.session.commit()

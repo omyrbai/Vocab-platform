@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
-from app.exceptions import ConflictError, NotFoundError
 from app.enums.import_action import ImportAction
+from app.exceptions import ConflictError, NotFoundError
 
 from app.repositories.language_repository import LanguageRepository
 from app.repositories.term_repository import TermRepository
@@ -12,7 +12,6 @@ from app.schemas.term import (
 )
 
 from app.db.models.term import Term
-from app.exceptions import ConflictError, NotFoundError
 
 class TermService:
 
@@ -27,12 +26,16 @@ class TermService:
         self.topic_repository = topic_repository
 
     def create(
-            self,
-            create_data: TermCreate
+        self,
+        user_id: int | None,
+        create_data: TermCreate,
+        *,
+        commit: bool = True,
     ) -> Term:
         """
         Create a new term.
         """
+
         src_language = self.language_repository.get(
             create_data.src_lang_id
         )
@@ -51,15 +54,22 @@ class TermService:
                 "Target language not found."
             )
 
-        if create_data.topic_id is not None:
-            topic = self.topic_repository.get(
-                create_data.topic_id
+        topic = self.topic_repository.get(
+            create_data.topic_id
+        )
+
+        if topic is None:
+            raise NotFoundError(
+                "Topic not found."
             )
 
-            if topic is None:
-                raise NotFoundError(
-                    "Topic not found."
-                )
+        if (
+            user_id is not None
+            and topic.user_id != user_id
+        ):
+            raise NotFoundError(
+                "Topic not found."
+            )
 
         existing_term = self.term_repository.find_duplicate(
             topic_id=create_data.topic_id,
@@ -74,15 +84,22 @@ class TermService:
             )
 
         return self.term_repository.create(
-            create_data
+            create_data,
+            commit=commit,
         )
 
     def update(
-            self,
-            term_id: int,
-            update_data: TermUpdate,
+        self,
+        user_id: int | None,
+        term_id: int,
+        update_data: TermUpdate,
+        *,
+        commit: bool = True,
     ) -> Term:
-        db_obj = self.term_repository.get(term_id)
+        db_obj = self.get(
+            user_id=user_id,
+            term_id=term_id,
+        )
 
         if db_obj is None:
             raise NotFoundError(
@@ -115,6 +132,14 @@ class TermService:
                     "Topic not found."
                 )
 
+            if (
+                user_id is not None
+                and topic.user_id != user_id
+            ):
+                raise NotFoundError(
+                    "Topic not found."
+                )
+
         term = (
             update_data.term
             if update_data.term is not None
@@ -135,8 +160,6 @@ class TermService:
                 "Target language not found."
             )
 
-
-
         existing_term = self.term_repository.find_duplicate(
             topic_id=topic_id,
             src_lang_id=src_lang_id,
@@ -153,99 +176,177 @@ class TermService:
         return self.term_repository.update(
             db_obj,
             update_data,
+            commit=commit,
         )
 
     def delete(
-            self,
-            term_id: int,
+        self,
+        user_id: int | None,
+        term_id: int,
+        *,
+        commit: bool = True,
     ) -> None:
-        db_obj = self.term_repository.get(term_id)
+        db_obj = self.get(
+            user_id=user_id,
+            term_id=term_id,
+        )
 
         if db_obj is None:
             raise NotFoundError(
                 "Term not found."
             )
 
-        self.term_repository.delete(db_obj)
+        self.term_repository.delete(
+            db_obj,
+            commit=commit,
+        )
 
     def get(
-            self,
-            term_id: int,
+        self,
+        user_id: int | None,
+        term_id: int,
     ) -> Term | None:
         """
         Get a term.
+
+        If user_id is provided, the term must belong
+        to a topic owned by that user.
+
+        If user_id is None, return the term regardless
+        of its topic owner.
         """
-        return self.term_repository.get(term_id)
+        if user_id is None:
+            return self.term_repository.get(term_id)
+
+        return self.term_repository.get_by_id_for_user(
+            term_id=term_id,
+            user_id=user_id,
+        )
 
     def get_by_term(
         self,
-        term: str
+        term: str,
+        user_id: int | None = None,
     ) -> Sequence[Term]:
         """
         Get terms by term.
+
+        If user_id is provided, only terms whose topics
+        belong to that user are returned.
         """
 
-        return self.term_repository.get_by_term(term)
+        return self.term_repository.get_by_term(
+            term=term,
+            user_id=user_id,
+        )
+
+    def get_by_topic_ids(
+        self,
+        topic_ids: Sequence[int],
+        user_id: int | None = None,
+    ) -> Sequence[Term]:
+        """
+        Get terms belonging to the specified topics.
+
+        If user_id is provided, only topics owned by that user
+        are included.
+        """
+
+        return self.term_repository.get_by_topic_ids(
+            topic_ids=topic_ids,
+            user_id=user_id,
+        )
 
     def get_all(
-            self,
+        self,
+        user_id: int | None = None,
     ) -> Sequence[Term]:
         """
         Get all terms.
+
+        If user_id is provided, return only terms whose
+        topics belong to that user.
+
+        If user_id is None, return all terms.
         """
-        return self.term_repository.get_all()
+
+
+        return self.term_repository.get_all(
+            user_id=user_id,
+        )
 
 
     def get_by_topic(
-            self,
-            topic_id: int
+        self,
+        topic_id: int,
+        user_id: int | None = None,
     ) -> Sequence[Term]:
         """
-        Get all terms by a specific topic.
+        Get terms belonging to a topic.
+
+        If user_id is provided, the topic must belong
+        to that user.
+
+        If user_id is None, return terms regardless
+        of topic owner.
         """
-        return self.term_repository.get_by_topic(topic_id)
+
+        return self.term_repository.get_by_topic(
+            topic_id=topic_id,
+            user_id=user_id,
+        )
 
     def get_by_languages(
             self,
-            src_lang_id: int,
-            trg_lang_id: int,
+            *,
+            user_id: int | None = None,
+            src_lang_id: int | None = None,
+            trg_lang_id: int | None = None,
     ) -> Sequence[Term]:
         """
         Get terms filtered by source and target language.
         """
         return self.term_repository.get_by_languages(
+            user_id=user_id,
             src_lang_id=src_lang_id,
             trg_lang_id=trg_lang_id,
         )
 
     def get_filtered(
-            self,
-            *,
-            topic_id: int | None = None,
-            src_lang_id: int | None = None,
-            trg_lang_id: int | None = None,
+        self,
+        *,
+        user_id: int | None = None,
+        topic_id: int | None = None,
+        src_lang_id: int | None = None,
+        trg_lang_id: int | None = None,
     ) -> Sequence[Term]:
         """
         Get terms filtered by topic and/or language pair.
         """
         return self.term_repository.get_filtered(
+            user_id=user_id,
             topic_id=topic_id,
             src_lang_id=src_lang_id,
             trg_lang_id=trg_lang_id,
         )
 
-    def get_latest(self) -> Term | None:
+    def term_count_by_user(
+        self,
+        user_id: int,
+    ) -> int:
         """
-        Get the latest term.
+        Count all terms belonging to topics owned by the user.
         """
-        return self.term_repository.get_latest()
+        return self.term_repository.term_count_by_user(
+            user_id=user_id,
+        )
 
     def find_duplicate(
-            self,
-            topic_id: int | None,
-            src_lang_id: int,
-            trg_lang_id: int,
-            term: str,
+        self,
+        topic_id: int,
+        src_lang_id: int,
+        trg_lang_id: int,
+        term: str,
     ) -> Term | None:
         """
         Find an existing term with the same unique key.
@@ -259,9 +360,9 @@ class TermService:
         )
 
     def _has_changes(
-            self,
-            db_obj: Term,
-            create_data: TermCreate,
+        self,
+        db_obj: Term,
+        create_data: TermCreate,
     ) -> bool:
         """
         Check whether the imported data differs from
@@ -277,8 +378,11 @@ class TermService:
         ])
 
     def upsert(
-            self,
-            create_data: TermCreate,
+        self,
+        user_id: int,
+        create_data: TermCreate,
+        *,
+        commit: bool = True,
     ) -> tuple[
         Term,
         ImportAction,
@@ -296,7 +400,11 @@ class TermService:
 
         if db_obj is None:
             return (
-                self.create(create_data),
+                self.create(
+                    user_id=user_id,
+                    create_data=create_data,
+                    commit=commit,
+                ),
                 ImportAction.CREATED,
             )
 
@@ -322,8 +430,10 @@ class TermService:
 
         return (
             self.update(
-                db_obj.term_id,
-                update_data,
+                user_id=user_id,
+                term_id=db_obj.term_id,
+                update_data=update_data,
+                commit=commit,
             ),
             ImportAction.UPDATED,
         )

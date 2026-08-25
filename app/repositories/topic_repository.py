@@ -28,8 +28,51 @@ class TopicRepository(
             pk_field="topic_id",
         )
 
+    def create_for_user(
+        self,
+        user_id: int,
+        create_data: TopicCreate,
+        *,
+        commit: bool = True,
+    ) -> Topic:
+        """
+        Create a new topic.
+        """
+
+        topic = Topic(
+            user_id=user_id,
+            parent_topic_id=create_data.parent_topic_id,
+            name=create_data.name,
+            description=create_data.description,
+        )
+
+        self.session.add(topic)
+        self.session.flush()
+
+        if commit:
+            self.session.commit()
+            self.session.refresh(topic)
+
+        return topic
+
+    def get_by_id_for_user(
+            self,
+            topic_id: int,
+            user_id: int,
+    ) -> Topic | None:
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.topic_id == topic_id,
+                self.model.user_id == user_id,
+            )
+        )
+
+        return self.session.scalar(stmt)
+
     def get_by_name(
             self,
+            user_id: int,
             name: str,
     ) -> Topic | None:
         """
@@ -38,13 +81,17 @@ class TopicRepository(
 
         stmt = (
             select(self.model)
-            .where(self.model.name == name)
+            .where(
+                self.model.user_id == user_id,
+                self.model.name == name,
+            )
         )
 
         return self.session.scalar(stmt)
 
     def get_by_parent_and_name(
         self,
+        user_id: int,
         parent_topic_id: int | None,
         name: str,
     ) -> Topic | None:
@@ -54,6 +101,7 @@ class TopicRepository(
         stmt = (
             select(self.model)
             .where(
+                self.model.user_id == user_id,
                 self.model.parent_topic_id == parent_topic_id,
                 self.model.name == name,
             )
@@ -62,21 +110,30 @@ class TopicRepository(
         return self.session.scalar(stmt)
 
     def get_all(
-            self,
+        self,
+        user_id: int | None = None,
     ) -> Sequence[Topic]:
         """
-        Get all topics.
-        """
+        Get topics.
 
-        stmt = (
-            select(self.model)
-            .order_by(self.model.name)
-        )
+        If user_id is provided, return only that user's topics.
+        If user_id is None, return all topics.
+        """
+        stmt = select(self.model)
+
+        if user_id is not None:
+            stmt = stmt.where(
+                self.model.user_id == user_id
+            )
+
+        stmt = stmt.order_by(self.model.name)
+
 
         return self.session.scalars(stmt).all()
 
     def find_duplicate(
             self,
+            user_id: int,
             parent_topic_id: int | None,
             name: str,
             exclude_topic_id: int | None,
@@ -88,6 +145,7 @@ class TopicRepository(
         stmt = (
             select(self.model)
             .where(
+                self.model.user_id == user_id,
                 self.model.parent_topic_id == parent_topic_id,
                 self.model.name == name,
             )

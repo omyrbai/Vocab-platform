@@ -19,6 +19,7 @@ def main() -> None:
     Start the Telegram bot.
     """
     importer = TelegramImporter(
+        user_id=7,
         source_language_code="de",
         target_language_code="en",
     )

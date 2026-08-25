@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db, get_current_user
+from app.api.dependencies import (
+    get_db,
+    get_current_user,
+    require_admin,
+)
 from app.db.models.user import User
 from app.dependencies import get_language_service
-from app.exceptions import ConflictError
+from app.exceptions import NotFoundError
 from app.schemas.language import (
     LanguageRead,
     LanguageCreate,
@@ -42,9 +46,8 @@ def get_language(
     language = language_service.get(lang_id)
 
     if language is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Language not found.",
+        raise NotFoundError(
+            "Language not found."
         )
     return language
 
@@ -56,17 +59,11 @@ def get_language(
 def create_language(
     create_data: LanguageCreate,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     language_service = get_language_service(session)
 
-    try:
-        return language_service.create(create_data)
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
+    return language_service.create(create_data)
 
 @router.patch(
     "/{lang_id}",
@@ -76,28 +73,20 @@ def update_language(
     lang_id: int,
     update_data: LanguageUpdate,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     language_service = get_language_service(session)
     language = language_service.get(lang_id)
 
     if language is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Language not found.",
+        raise NotFoundError(
+            "Language not found."
         )
 
-    try:
-        return language_service.update(
-            language,
-            update_data,
-        )
-
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
+    return language_service.update(
+        language,
+        update_data,
+    )
 
 @router.delete(
     "/{lang_id}",
@@ -106,16 +95,15 @@ def update_language(
 def delete_language(
     lang_id: int,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     language_service = get_language_service(session)
 
     language = language_service.get(lang_id)
 
     if language is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Language not found.",
+        raise NotFoundError(
+            "Language not found."
         )
 
     language_service.delete(language)

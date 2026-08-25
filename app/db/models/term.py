@@ -32,14 +32,14 @@ class Term(Base):
         nullable=True,
     )
 
-    topic_id: Mapped[int | None] = mapped_column(
+    topic_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(
             "topics.topic_id",
-            ondelete="SET NULL",
+            ondelete="RESTRICT",
             onupdate="CASCADE",
         ),
-        nullable=True,
+        nullable=False,
     )
 
     src_lang_id: Mapped[int] = mapped_column(

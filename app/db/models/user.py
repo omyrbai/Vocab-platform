@@ -18,6 +18,7 @@ from sqlalchemy.orm import (
 
 from app.db.database import Base
 from app.db.models.language import Language
+from app.enums.user_role import UserRole
 
 from typing import TYPE_CHECKING
 
@@ -34,6 +35,13 @@ class User(Base):
         primary_key=True,
         autoincrement=True,
     )
+
+    role: Mapped[UserRole] = mapped_column(
+        String(20),
+        nullable=False,
+        default=UserRole.USER,
+    )
+
     telegram_id: Mapped[int | None] = mapped_column(
         BigInteger,
         unique=True,

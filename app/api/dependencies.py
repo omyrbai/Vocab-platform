@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
 from app.db.database import SessionLocal
+from app.db.models.user import User
+from app.enums.user_role import UserRole
+from app.exceptions import ForbiddenError
 from app.repositories.user_repository import UserRepository
 
 
@@ -24,10 +27,13 @@ def get_current_user(
     session: Session = Depends(get_db),
 ):
     token = credentials.credentials
+    print("token=", token)
 
     try:
         payload = decode_access_token(token)
-    except Exception:
+        print("payload=", payload)
+    except Exception as exc:
+        print("JWT ERROR: ", type(exc).__name__, str(exc))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired access token.",
@@ -62,3 +68,13 @@ def get_current_user(
         )
 
     return user
+
+def require_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise ForbiddenError(
+            "Admin access required."
+        )
+
+    return current_user

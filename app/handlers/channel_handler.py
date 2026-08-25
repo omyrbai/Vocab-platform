@@ -79,12 +79,11 @@ async def channel_post(
                 session,
             )
 
-            latest_term = term_service.get_latest()
+            term_count = term_service.term_count_by_user(
+                user_id=importer.user_id,
+            )
 
-            if latest_term is None:
-                start_number = 1
-            else:
-                start_number = latest_term.term_id + 1
+            start_number = term_count + 1
 
         print(f"Generating vocabulary with AI starting from {start_number}...")
 

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.exceptions import ConflictError, NotFoundError
 from app.api.dependencies import get_db, get_current_user
 from app.db.models.user import User
+from app.enums.user_role import UserRole
+from app.exceptions import NotFoundError
 from app.dependencies import get_topic_service
 from app.schemas.topic import TopicRead, TopicCreate, TopicUpdate
 
@@ -10,6 +11,14 @@ router = APIRouter(
     prefix="/api/v1/topics",
     tags=["Topics"],
 )
+
+def get_topic_user_id(
+    current_user: User,
+) -> int | None:
+    if current_user.role == UserRole.ADMIN:
+        return None
+
+    return current_user.user_id
 
 @router.get(
     "/",
@@ -21,7 +30,9 @@ def get_topics(
 ):
     topic_service = get_topic_service(session)
 
-    return topic_service.get_all()
+    return topic_service.get_all(
+        user_id=get_topic_user_id(current_user),
+    )
 
 @router.get(
     "/{topic_id}",
@@ -34,12 +45,14 @@ def get_topic(
 ):
     topic_service = get_topic_service(session)
 
-    topic = topic_service.get(topic_id)
+    topic = topic_service.get(
+        user_id=get_topic_user_id(current_user),
+        topic_id=topic_id,
+    )
 
     if topic is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Topic not found.",
+        raise NotFoundError(
+            "Topic not found."
         )
 
     return topic
@@ -56,18 +69,11 @@ def create_topic(
 ):
     topic_service = get_topic_service(session)
 
-    try:
-        return topic_service.create(create_data)
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
+    return topic_service.create(
+        user_id=current_user.user_id,
+        create_data=create_data
+    )
+
 
 @router.patch(
     "/{topic_id}",
@@ -81,30 +87,22 @@ def update_topic(
 ):
     topic_service = get_topic_service(session)
 
-    topic = topic_service.get(topic_id)
+    topic = topic_service.get(
+        user_id=get_topic_user_id(current_user),
+        topic_id=topic_id,
+    )
 
     if topic is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Topic not found."
+        raise NotFoundError(
+            "Topic not found."
         )
 
-    try:
-        return topic_service.update(
-            topic,
-            update_data,
-        )
 
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
+    return topic_service.update(
+        user_id=get_topic_user_id(current_user),
+        db_obj=topic,
+        update_data=update_data,
+    )
 
 @router.delete(
     "/{topic_id}",
@@ -117,12 +115,17 @@ def delete_topic(
 ):
     topic_service = get_topic_service(session)
 
-    topic = topic_service.get(topic_id)
+    topic = topic_service.get(
+        user_id=get_topic_user_id(current_user),
+        topic_id=topic_id,
+    )
 
     if topic is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Topic not found.",
+        raise NotFoundError(
+            "Topic not found."
         )
 
-    topic_service.delete(topic)
+    topic_service.delete(
+        user_id=get_topic_user_id(current_user),
+        db_obj=topic,
+    )

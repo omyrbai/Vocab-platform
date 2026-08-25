@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db, get_current_user
+from app.api.dependencies import (
+    get_db,
+    get_current_user,
+    require_admin,
+)
+
 from app.db.models.user import User
 from app.dependencies import get_user_service
-from app.exceptions import ConflictError, NotFoundError
+from app.exceptions import NotFoundError
 from app.schemas.user import (
     UserRead,
     UserCreate,
@@ -24,7 +29,7 @@ router = APIRouter(
 )
 def get_users(
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     user_service = get_user_service(session)
 
@@ -37,16 +42,15 @@ def get_users(
 def get_user(
     user_id: int,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     user_service = get_user_service(session)
 
     user = user_service.get(user_id)
 
     if user is None:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found.",
+        raise NotFoundError(
+         "User not found."
         )
 
     return user
@@ -59,24 +63,11 @@ def get_user(
 def create_user(
     create_data: UserCreate,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     user_service = get_user_service(session)
 
-    try:
-        return user_service.create(create_data)
-
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
-
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
+    return user_service.create(create_data)
 
 @router.patch(
     "/{user_id}",
@@ -86,27 +77,15 @@ def update_user(
     user_id: int,
     update_data: UserUpdate,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     user_service = get_user_service(session)
 
-    try:
-        return user_service.update(
-            user_id,
-            update_data,
-        )
 
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
-
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
+    return user_service.update(
+        user_id,
+        update_data,
+    )
 
 @router.delete(
     "/{user_id}",
@@ -115,15 +94,8 @@ def update_user(
 def delete_user(
     user_id: int,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     user_service = get_user_service(session)
 
-    try:
-        user_service.delete(user_id)
-
-    except NotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        )
+    user_service.delete(user_id)

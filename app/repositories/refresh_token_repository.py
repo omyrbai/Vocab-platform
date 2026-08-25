@@ -54,13 +54,18 @@ class RefreshTokenRepository(
         return self.session.scalar(stmt)
 
     def revoke(
-            self,
-            db_obj: RefreshToken,
+        self,
+        db_obj: RefreshToken,
+        *,
+        commit: bool = True,
     ) -> None:
         """
-        Revoke a refresh token without committing.
+        Revoke a refresh token.
         """
 
         db_obj.revoked_at = datetime.now(timezone.utc)
 
         self.session.flush()
+
+        if commit:
+            self.session.commit()

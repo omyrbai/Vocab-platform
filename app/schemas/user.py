@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+from app.enums.user_role import UserRole
+
 
 class UserBase(BaseModel):
     telegram_id: int | None = None
@@ -42,6 +44,7 @@ class UserUpdate(BaseModel):
 
 class UserRead(UserBase):
     user_id: int
+    role: UserRole
     created_at: datetime
 
     model_config = ConfigDict(

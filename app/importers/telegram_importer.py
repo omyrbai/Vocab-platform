@@ -23,9 +23,11 @@ class TelegramImporter:
 
     def __init__(
         self,
+        user_id: int,
         source_language_code: str,
         target_language_code: str,
     ):
+        self.user_id = user_id
         self.source_language_code = source_language_code
         self.target_language_code = target_language_code
 
@@ -107,6 +109,7 @@ class TelegramImporter:
             )
 
         topic = topic_service.get_by_parent_and_name(
+            user_id=self.user_id,
             parent_topic_id=None,
             name=topic_name,
         )
@@ -117,7 +120,9 @@ class TelegramImporter:
                 name=topic_name,
             )
             topic = topic_service.create(
-                create_data,
+                user_id=self.user_id,
+                create_data=create_data,
+                commit=False,
             )
 
         self.current_topic_id = topic.topic_id
@@ -156,7 +161,7 @@ class TelegramImporter:
         )
 
         if trg_lang is None:
-            raise ValueError(
+            raise NotFoundError(
                 f"Language '{self.target_language_code}' not found."
             )
 
@@ -176,7 +181,9 @@ class TelegramImporter:
             )
 
             db_term, action = term_service.upsert(
-                create_data,
+                user_id=self.user_id,
+                create_data=create_data,
+                commit=False,
             )
 
             upsert_result = UpsertResult(

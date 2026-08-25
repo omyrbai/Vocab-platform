@@ -1,9 +1,10 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.models.term import Term
+from app.db.models.topic import Topic
 from app.repositories.base_repository import BaseRepository
 from app.schemas.term import (
     TermCreate,
@@ -28,47 +29,117 @@ class TermRepository(
             pk_field="term_id",
         )
 
-    def get_by_term(
-        self,
-        term: str,
-    ) -> Sequence[Term]:
+    def get_by_id_for_user(
+            self,
+            term_id: int,
+            user_id: int,
+    ) -> Term | None:
         """
-        Get a term by term.
+        Get a term belonging to a topic owned by the specified user.
         """
 
         stmt = (
             select(self.model)
-            .where(self.model.term == term)
+            .join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            )
+            .where(
+                self.model.term_id == term_id,
+                Topic.user_id == user_id,
+            )
+        )
+
+        return self.session.scalar(stmt)
+
+    def get_by_term(
+        self,
+        term: str,
+        user_id: int | None = None,
+    ) -> Sequence[Term]:
+        """
+        Get terms by term.
+
+        If user_id is provided, only terms whose topics
+        belong to that user are returned.
+        """
+
+        stmt = select(self.model)
+
+        if user_id is not None:
+            stmt = stmt.join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            ).where(
+                Topic.user_id == user_id
+            )
+
+        stmt = stmt.where(
+            self.model.term == term,
+        ).order_by(
+            self.model.term,
         )
 
         return self.session.scalars(stmt).all()
 
     def get_all(
         self,
+        user_id: int | None = None,
     ) -> Sequence[Term]:
         """
         Get all terms.
+
+        If user_id is provided, return only terms whose
+        topics belong to that user.
+
+        If user_id is None, return all terms.
         """
 
-        stmt = (
-            select(self.model)
-            .order_by(self.model.term)
+        stmt = select(self.model)
+
+        if user_id is not None:
+            stmt = stmt.join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            ).where(
+                Topic.user_id == user_id,
+            )
+
+        stmt = stmt.order_by(
+            self.model.term,
         )
 
         return self.session.scalars(stmt).all()
 
     def get_by_topic(
         self,
-        topic_id: int
+        topic_id: int,
+        user_id: int | None = None,
     ) -> Sequence[Term]:
         """
-        Get all terms which contains the topic.
+        Get terms belonging to a topic.
+
+        If user_id is provided, the topic must belong
+        to that user.
+
+        If user_id is None, return terms regardless
+        of topic owner.
         """
 
-        stmt = (
-            select(self.model)
-            .where(self.model.topic_id == topic_id)
-            .order_by(self.model.term)
+        stmt = select(self.model)
+
+        if user_id is not None:
+            stmt = stmt.join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            ).where(
+                Topic.user_id == user_id,
+            )
+
+        stmt = stmt.where(
+            self.model.topic_id == topic_id
+        ).order_by(
+            self.model.term
         )
 
         return self.session.scalars(stmt).all()
@@ -76,34 +147,59 @@ class TermRepository(
     def get_by_topic_ids(
         self,
         topic_ids: Sequence[int],
+        user_id: int | None = None,
     ) -> Sequence[Term]:
+        """
+        Get terms belonging to the specified topics.
 
-        stmt = (
-            select(self.model)
-            .where(
-                self.model.topic_id.in_(topic_ids)
+        If user_id is provided, only topics owned by that
+        user are included.
+
+        If user_id is None, topics from any user are included.
+        """
+
+        stmt = select(self.model)
+
+        if user_id is not None:
+            stmt = stmt.join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            ).where(
+                Topic.user_id == user_id,
             )
-            .order_by(self.model.term)
+
+        stmt = stmt.where(
+            self.model.topic_id.in_(topic_ids)
+        ).order_by(
+            self.model.term
         )
 
         return self.session.scalars(stmt).all()
 
-    def get_latest(self) -> Term | None:
+    def term_count_by_user(
+        self,
+        user_id: int,
+    ) -> int:
         """
-        Get the latest term.
+        Count all terms belonging to topics owned by the user.
         """
         stmt = (
-            select(self.model)
-            .order_by(self.model.term_id.desc())
-            .limit(1)
+            select(func.count(self.model.term_id))
+            .join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            ).where(
+                Topic.user_id == user_id,
+            )
         )
 
-        return self.session.scalar(stmt)
+        return self.session.scalar(stmt) or 0
 
 
     def get_by_languages(
         self,
         *,
+        user_id: int | None = None,
         src_lang_id: int | None = None,
         trg_lang_id: int | None = None,
     ) -> Sequence[Term]:
@@ -117,6 +213,15 @@ class TermRepository(
             )
 
         stmt = select(self.model)
+
+        if user_id is not None:
+            stmt = stmt.join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            ).where(
+                Topic.user_id == user_id,
+            )
+
 
         if src_lang_id is not None:
             stmt = stmt.where(
@@ -135,14 +240,28 @@ class TermRepository(
     def get_filtered(
             self,
             *,
+            user_id: int | None = None,
             topic_id: int | None = None,
             src_lang_id: int | None = None,
             trg_lang_id: int | None = None,
     ) -> Sequence[Term]:
         """
-        Get terms filtered by topic and/or language pair.
+        Get terms filtered by user, topic, and/or language pair.
+
+        If user_id is provided, return only terms whose
+        topic belongs to that user.
+
+        If user_id is None, return terms regardless of owner.
         """
         stmt = select(self.model)
+
+        if user_id is not None:
+            stmt = stmt.join(
+                Topic,
+                self.model.topic_id == Topic.topic_id,
+            ).where(
+                Topic.user_id == user_id,
+            )
 
         if topic_id is not None:
             stmt = stmt.where(
@@ -166,7 +285,7 @@ class TermRepository(
     def find_duplicate(
         self,
         *,
-        topic_id: int | None,
+        topic_id: int,
         src_lang_id: int,
         trg_lang_id: int,
         term: str,
@@ -182,19 +301,11 @@ class TermRepository(
         stmt = select(self.model)
 
         stmt = stmt.where(
+            self.model.topic_id == topic_id,
             self.model.src_lang_id == src_lang_id,
             self.model.trg_lang_id == trg_lang_id,
             self.model.term == term,
         )
-
-        if topic_id is not None:
-            stmt = stmt.where(
-                self.model.topic_id == topic_id
-            )
-        else:
-            stmt = stmt.where(
-                self.model.topic_id.is_(None)
-            )
 
         if exclude_term_id is not None:
             stmt = stmt.where(

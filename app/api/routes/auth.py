@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db, get_current_user
@@ -8,7 +8,6 @@ from app.schemas.user import (
 )
 from app.dependencies import get_auth_service
 
-from app.exceptions import ConflictError
 from app.schemas.auth import (
     LoginRequest,
     RefreshRequest,
@@ -42,16 +41,9 @@ def register(
 ):
     auth_service = get_auth_service(session)
 
-    try:
-        return auth_service.register(
-            register_data,
-        )
-
-    except ConflictError as exc:
-        raise HTTPException(
-            status_code=409,
-            detail=str(exc),
-        )
+    return auth_service.register(
+        register_data,
+    )
 
 @router.post(
     "/login",
@@ -63,17 +55,11 @@ def login(
 ):
     auth_service = get_auth_service(session)
 
-    try:
-        return auth_service.login(
-            email=login_data.email,
-            password=login_data.password,
-        )
 
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=401,
-            detail=str(exc),
-        )
+    return auth_service.login(
+        email=login_data.email,
+        password=login_data.password,
+    )
 
 @router.post(
     "/refresh",
@@ -85,16 +71,9 @@ def refresh(
 ):
     auth_service = get_auth_service(session)
 
-    try:
-        return auth_service.refresh(
-            refresh_data.refresh_token,
-        )
-
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=401,
-            detail=str(exc),
-        )
+    return auth_service.refresh(
+        refresh_data.refresh_token,
+    )
 
 @router.post(
     "/logout",

@@ -4,3 +4,11 @@ class NotFoundError(Exception):
 
 class ConflictError(Exception):
     pass
+
+
+class ForbiddenError(Exception):
+    pass
+
+
+class AuthenticationError(Exception):
+    pass
