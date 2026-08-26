@@ -121,18 +121,40 @@ class AuthService:
 
     def login(
             self,
-            email: str,
+            identifier: str,
             password: str,
     ) -> TokenResponse:
         """
-        Authenticate a user using email and password.
+        Authenticate a user using username or email and password.
         """
 
-        email = email.lower()
+        identifier = identifier.strip()
 
+        # Try email first.
         identity = self.identity_repository.get_by_email(
-            email,
+            identifier.lower(),
         )
+
+        # If no email identity was found, try username.
+        if identity is None:
+            user = self.user_repository.get_by_username(
+                identifier,
+            )
+
+            if user is not None:
+                # Find the email/password identity belonging
+                # to this user.
+                identities = self.identity_repository.get_by_user_id(
+                    user.user_id,
+                )
+
+                for user_identity in identities:
+                    if (
+                            user_identity.provider == AuthProvider.EMAIL.value
+                            and user_identity.password_hash is not None
+                    ):
+                        identity = user_identity
+                        break
 
         if (
                 identity is None
@@ -143,7 +165,7 @@ class AuthService:
         )
         ):
             raise AuthenticationError(
-                "Invalid email or password."
+                "Invalid username/email or password."
             )
 
         refresh_token = generate_refresh_token()
@@ -153,10 +175,10 @@ class AuthService:
         )
 
         expires_at = (
-            datetime.now(timezone.utc)
-            + timedelta(
-                days=settings.REFRESH_TOKEN_EXPIRE_DAYS,
-            )
+                datetime.now(timezone.utc)
+                + timedelta(
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS,
+        )
         )
 
         self.refresh_token_repository.create(
@@ -170,7 +192,6 @@ class AuthService:
         access_token = create_access_token(
             identity.user_id,
         )
-
 
         return TokenResponse(
             access_token=access_token,

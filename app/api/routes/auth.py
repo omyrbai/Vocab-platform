@@ -77,7 +77,7 @@ def login(
 
 
     return auth_service.login(
-        email=login_data.email,
+        identifier=login_data.identifier,
         password=login_data.password,
     )
 
