@@ -5,8 +5,12 @@ from app.api.dependencies import get_db, get_current_user
 from app.db.models.user import User
 from app.schemas.user import (
     UserRead,
+    UserUpdate,
 )
-from app.dependencies import get_auth_service
+from app.dependencies import (
+    get_auth_service,
+    get_user_service,
+)
 
 from app.schemas.auth import (
     LoginRequest,
@@ -29,6 +33,22 @@ def get_me(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
+@router.patch(
+    "/me",
+    response_model=UserRead,
+)
+def update_me(
+    update_data: UserUpdate,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_service = get_user_service(session)
+
+    return user_service.update(
+        current_user.user_id,
+        update_data,
+    )
 
 @router.post(
     "/register",

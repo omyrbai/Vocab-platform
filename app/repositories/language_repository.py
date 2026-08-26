@@ -9,6 +9,8 @@ from app.schemas.language import (
     LanguageCreate,
     LanguageUpdate,
 )
+from sqlalchemy.exc import IntegrityError
+from app.exceptions import ConflictError
 
 
 class LanguageRepository(
@@ -82,3 +84,26 @@ class LanguageRepository(
             )
 
         return self.session.scalar(stmt)
+
+    def delete(
+        self,
+        db_obj: Language,
+        *,
+        commit: bool = True,
+    ) -> None:
+        """
+        Delete a language.
+        """
+
+        try:
+            super().delete(
+                db_obj=db_obj,
+                commit=commit,
+            )
+
+        except IntegrityError:
+            self.session.rollback()
+
+            raise ConflictError(
+                "Language cannot be deleted because it is used by existing terms."
+            )
