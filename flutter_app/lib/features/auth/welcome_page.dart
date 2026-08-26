@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'auth_service.dart';
+
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
 
@@ -8,7 +10,69 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
+  final _identifierController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  final _authService = AuthService();
+
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    final identifier = _identifierController.text.trim();
+    final password = _passwordController.text;
+
+    if (identifier.isEmpty || password.isEmpty) {
+      _showMessage('Please enter username/email and password.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final success = await _authService.login(
+        identifier: identifier,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        _showMessage('Login successful!');
+      } else {
+        _showMessage('Invalid username/email or password.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Unable to connect to the server.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +94,7 @@ class _WelcomePageState extends State<WelcomePage> {
               const SizedBox(height: 40),
 
               TextField(
+                controller: _identifierController,
                 decoration: const InputDecoration(
                   labelText: 'Username or email',
                   border: OutlineInputBorder(),
@@ -39,6 +104,7 @@ class _WelcomePageState extends State<WelcomePage> {
               const SizedBox(height: 16),
 
               TextField(
+                controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   labelText: 'Password',
@@ -64,10 +130,16 @@ class _WelcomePageState extends State<WelcomePage> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Login will be connected to FastAPI later.
-                  },
-                  child: const Text('Login'),
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Login'),
                 ),
               ),
 

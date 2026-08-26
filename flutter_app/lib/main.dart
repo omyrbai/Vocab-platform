@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'features/auth/welcome_page.dart';
+
+import 'features/auth/auth_gate.dart';
 
 void main() {
   runApp(const VocabPlatformApp());
@@ -19,26 +20,7 @@ class VocabPlatformApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const WelcomePage(),
+      home: const AuthGate(),
     );
   }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Vocab Platform',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-}
+}r
