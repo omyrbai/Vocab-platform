@@ -81,32 +81,37 @@ class TopicService:
         )
 
     def create(
-        self,
-        user_id: int,
-        create_data: TopicCreate,
-        *,
-        commit: bool = True,
+            self,
+            user_id: int,
+            create_data: TopicCreate,
+            *,
+            is_admin: bool = False,
+            commit: bool = True,
     ) -> Topic:
         """
         Create a new topic.
+
+        If a parent topic is provided, the new topic belongs
+        to the same user as the parent topic.
         """
+
+        owner_id = user_id
 
         if create_data.parent_topic_id is not None:
             parent_topic = self.get(
-                user_id=user_id,
+                user_id=None if is_admin else user_id,
                 topic_id=create_data.parent_topic_id,
             )
 
-            if (
-                parent_topic is None
-                or parent_topic.user_id != user_id
-            ):
+            if parent_topic is None:
                 raise NotFoundError(
                     "Parent topic not found."
                 )
 
+            owner_id = parent_topic.user_id
+
         existing_topic = self.get_by_parent_and_name(
-            user_id=user_id,
+            user_id=owner_id,
             parent_topic_id=create_data.parent_topic_id,
             name=create_data.name,
         )
@@ -117,7 +122,7 @@ class TopicService:
             )
 
         return self.repository.create_for_user(
-            user_id=user_id,
+            user_id=owner_id,
             create_data=create_data,
             commit=commit,
         )

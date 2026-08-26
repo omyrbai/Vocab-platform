@@ -71,7 +71,8 @@ def create_topic(
 
     return topic_service.create(
         user_id=current_user.user_id,
-        create_data=create_data
+        create_data=create_data,
+        is_admin=current_user.role == UserRole.ADMIN,
     )
 
 

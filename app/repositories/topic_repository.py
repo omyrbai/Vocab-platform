@@ -2,7 +2,9 @@ from collections.abc import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
+from app.exceptions import ConflictError
 from app.db.models.topic import Topic
 from app.repositories.base_repository import BaseRepository
 from app.schemas.topic import (
@@ -157,3 +159,26 @@ class TopicRepository(
             )
 
         return self.session.scalar(stmt)
+
+    def delete(
+            self,
+            db_obj: Topic,
+            *,
+            commit: bool = True,
+    ) -> None:
+        """
+        Delete a topic.
+        """
+
+        try:
+            super().delete(
+                db_obj=db_obj,
+                commit=commit,
+            )
+
+        except IntegrityError:
+            self.session.rollback()
+
+            raise ConflictError(
+                "Topic cannot be deleted because it contains existing terms."
+            )
