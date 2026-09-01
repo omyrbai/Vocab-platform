@@ -23,4 +23,4 @@ class VocabPlatformApp extends StatelessWidget {
       home: const AuthGate(),
     );
   }
-}r
+}

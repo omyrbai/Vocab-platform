@@ -43,9 +43,7 @@ class AuthService {
     return true;
   }
 
-  Future<void> logout() async {
-    await _tokenStorage.clearTokens();
-  }
+
   Future<bool> refreshToken() async {
   final refreshToken = await _tokenStorage.getRefreshToken();
 
@@ -77,4 +75,7 @@ class AuthService {
 
   return true;
 }
+  Future<void> logout() async {
+    await _tokenStorage.clearTokens();
+  }
 }

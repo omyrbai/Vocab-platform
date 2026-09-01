@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../home/home_page.dart';
 import 'auth_service.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -47,7 +48,11 @@ class _WelcomePageState extends State<WelcomePage> {
       if (!mounted) return;
 
       if (success) {
-        _showMessage('Login successful!');
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const HomePage(),
+          ),
+        );
       } else {
         _showMessage('Invalid username/email or password.');
       }
