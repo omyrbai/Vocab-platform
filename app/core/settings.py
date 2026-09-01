@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     JWT_PUBLIC_KEY_PATH: str = "secrets/jwt_public.pem"
     JWT_ALGORITHM: str = "RS256"
 
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     model_config = SettingsConfigDict(
