@@ -18,3 +18,5 @@ ruff~=0.12
 black~=25.1
 
 groq
+
+PyJWT~=2.10
